@@ -28,6 +28,7 @@ private:
   void init();
   void readAM2302(byte);
   void readAM2315(byte);
+  void readLDR(byte);
   void readMoisture(byte);
   void readSHT10(byte);
   void readDS18B20(byte);

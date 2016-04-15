@@ -114,6 +114,16 @@ void Sensa::activateIO(byte id, String model, byte pin){
     IO[id][MODEL]  = SHT10H;
     IO[id][PIN]    = pin;
   }
+  else if(model == "LDR"){
+    Serial.print(F("Activating Light Dependant Resistor on pin "));
+    Serial.print(pin);
+    Serial.print(F(" with ID "));
+    Serial.println(id);
+    IO[id][STATUS] = ACTIVE;
+    IO[id][TYPE]   = SENSOR;
+    IO[id][MODEL]  = LDR;
+    IO[id][PIN]    = pin;
+  }
   else if(model == "RES_MOIS"){
     Serial.print(F("Activating Moisture Sensor on pin "));
     Serial.print(pin);
@@ -223,6 +233,10 @@ void Sensa::readIO(byte IO_id){
       Serial.println(F("Reading SHT10H"));
       readSHT10(IO_id);
       break;
+    case LDR:
+      Serial.println(F("Reading LDR"));
+      readLDR(IO_id);
+      break;
     case RES_MOIS:
       Serial.println(F("Reading MOISTURE"));
       readMoisture(IO_id);
@@ -325,6 +339,11 @@ void Sensa::readSHT10(byte IO_id){
   IO_values[humi_id] = sht10.readHumidity();
   IO_updates[humi_id] = millis();
   IO_updates[temp_id] = IO_updates[humi_id];
+}
+
+void Sensa::readLDR(byte id){
+  int moist = analogRead(IO[id][PIN]);
+  IO_values[id] = moist;
 }
 
 void Sensa::readMoisture(byte id){

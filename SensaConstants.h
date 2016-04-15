@@ -47,5 +47,6 @@ enum IO_model {
   BIN_SWITCH,
   BIN_RSWITCH,
   DS18B20,
+  LDR,
 };
 extern byte IO_model;
