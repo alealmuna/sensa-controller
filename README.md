@@ -7,29 +7,23 @@ protocol. Sensors must be activated before sampling data.
 
 ## Serial protocol
 
-Activate I/O
-: ```activate/<IO_ID>/<IO_TYPE>/```
-
-
-Read I/O
-
-: ```read/<IO_ID>/```
-
-Write I/O
-
-: ```write/<IO_ID>/<value>/```
-
-Deactivate I/O
-
-: ```deactivate/<IO_ID>/```
-
-Set initial status on pin
-
-: ```init/<pin>/<value>/```
-
-Sample all registered IOs
-
-: ```0```
+* Activate I/O
+  * ```activate/<IO_ID>/<IO_TYPE>/```
+  
+* Read I/O
+  * ```read/<IO_ID>/```
+  
+* Write I/O
+  * ```write/<IO_ID>/<value>/```
+  
+* Deactivate I/O
+  * ```deactivate/<IO_ID>/```
+  
+* Set initial status on pin
+  * ```init/<pin>/<value>/```
+  
+* Sample all registered IOs
+  * ```0```
 
 ## I/O Types
 
