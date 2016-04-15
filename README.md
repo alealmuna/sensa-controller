@@ -29,7 +29,7 @@ protocol. Sensors must be activated before sampling data.
   
 * Sample all registered IOs
 
-  ```0```
+  ```0 ```
 
 ## I/O Types
 
