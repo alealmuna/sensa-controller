@@ -8,6 +8,8 @@
 #include <SHT1x.h>
 #include <Wire.h>
 #include <EEPROM.h>
+#include <BH1750FVI.h>
+
 
 Sensa::Sensa(){
   init();
@@ -164,6 +166,7 @@ void Sensa::activateIO(byte id, String model, byte pin){
     IO[id][TYPE]   = SENSOR;
     IO[id][MODEL]  = DS18B20;
     IO[id][PIN]    = pin;
+    IO[id][STATUS] = ACTIVE;
     if(IO[id][STATUS] != ACTIVE){
       OneWire oneWire(pin);
       ds_sensors.setOneWire(&oneWire);
@@ -171,7 +174,46 @@ void Sensa::activateIO(byte id, String model, byte pin){
       ds_sensors.setResolution(12);
     }
     IO[id][STATUS] = ACTIVE;
-    readDS18B20(id);
+    readDS18B20(id, 0);
+  }
+  else if(model == "DS18B20_1" ){
+    Serial.print(F("Activating DS18B20_1 sensor on pin "));
+    Serial.print(pin);
+    Serial.print(F(" with ID "));
+    Serial.println(id);
+    IO[id][TYPE]   = SENSOR;
+    IO[id][MODEL]  = DS18B20_1;
+    IO[id][PIN]    = pin;
+    IO[id][STATUS] = ACTIVE;
+    readDS18B20(id, 1);
+  }
+  else if(model == "BH1750" ){
+    Serial.print(F("Activating BH1750 sensor"));
+    Serial.print(pin);
+    Serial.print(F(" with ID "));
+    Serial.println(id);
+    IO[id][TYPE]   = SENSOR;
+    IO[id][MODEL]  = BH1750;
+    IO[id][PIN]    = pin;
+    IO[id][STATUS] = ACTIVE;
+    BH1750FVI LightSensor;
+    LightSensor.begin();
+    LightSensor.SetAddress(Device_Address_L);
+    LightSensor.SetMode(Continuous_H_resolution_Mode);
+    readBH1750(id);
+  }
+  else if(model == "MG811"){
+    Serial.print(F("Activating MG811 sensor on pin "));
+    Serial.print(pin);
+    Serial.print(F(" with ID "));
+    Serial.println(id);
+    pinMode(A5, INPUT);
+    IO[id][TYPE]   = SENSOR;
+    IO[id][MODEL]  = MG811;
+    IO[id][PIN]    = pin;
+    IO[id][STATUS] = ACTIVE;
+    IO[id][STATUS] = ACTIVE;
+    readMG811(id);
   }
 }
 
@@ -198,54 +240,68 @@ void Sensa::readIO(byte IO_id){
   Serial.print(F(": "));
   switch(IO[IO_id][MODEL]){
     case AM2302:
-      Serial.println(F("Reading AM2302"));
+      Serial.print(F("Reading AM2302"));
       readAM2302(IO_id);
       break;
     case AM2302T:
-      Serial.println(F("Reading AM2302T"));
+      Serial.print(F("Reading AM2302T"));
       readAM2302(IO_id);
       break;
     case AM2302H:
-      Serial.println(F("Reading AM2302H"));
+      Serial.print(F("Reading AM2302H"));
       readAM2302(IO_id);
       break;
     case AM2315:
-      Serial.println(F("Reading AM2315"));
+      Serial.print(F("Reading AM2315"));
       readAM2315(IO_id);
       break;
     case AM2315T:
-      Serial.println(F("Reading AM2315T"));
+      Serial.print(F("Reading AM2315T"));
       readAM2315(IO_id);
       break;
     case AM2315H:
-      Serial.println(F("Reading AM2315H"));
+      Serial.print(F("Reading AM2315H"));
       readAM2315(IO_id);
       break;
     case SHT10:
-      Serial.println(F("Reading SHT10"));
+      Serial.print(F("Reading SHT10"));
       readSHT10(IO_id);
       break;
     case SHT10T:
-      Serial.println(F("Reading SHT10T"));
+      Serial.print(F("Reading SHT10T"));
       readSHT10(IO_id);
       break;
     case SHT10H:
-      Serial.println(F("Reading SHT10H"));
+      Serial.print(F("Reading SHT10H"));
       readSHT10(IO_id);
       break;
     case LDR:
-      Serial.println(F("Reading LDR"));
+      Serial.print(F("Reading LDR"));
       readLDR(IO_id);
       break;
     case RES_MOIS:
-      Serial.println(F("Reading MOISTURE"));
+      Serial.print(F("Reading MOISTURE"));
       readMoisture(IO_id);
       break;
     case DS18B20:
-      Serial.println(F("Reading DS18B20"));
-      readDS18B20(IO_id);
+      Serial.print(F("Reading DS18B20"));
+      readDS18B20(IO_id, 0);
+      break;
+    case DS18B20_1:
+      Serial.print(F("Reading DS18B20_1"));
+      readDS18B20(IO_id, 1);
+      break;
+    case BH1750:
+      Serial.print(F("Reading BH1750"));
+      readBH1750(IO_id);
+      break;
+    case MG811:
+      Serial.print(F("Reading MG811"));
+      readMG811(IO_id);
       break;
   }
+  Serial.print(F("\tValue: "));
+  Serial.println(IO_values[IO_id]);
 }
 
 int Sensa::searchType(byte model){
@@ -293,6 +349,7 @@ void Sensa::readAM2302(byte IO_id){
   }
   IO_updates[humi_id] = millis();
   IO_updates[temp_id] = IO_updates[humi_id];
+  delay(50);
 }
 
 void Sensa::readAM2315(byte IO_id){
@@ -352,12 +409,47 @@ void Sensa::readMoisture(byte id){
   IO_values[id] = nmoist;
 }
 
-void Sensa::readDS18B20(byte id){
+void Sensa::readDS18B20(byte id, byte index){
   OneWire oneWire(IO[id][PIN]);
   ds_sensors.setOneWire(&oneWire);
   ds_sensors.requestTemperatures();
-  IO_values[id] = ds_sensors.getTempCByIndex(0);
-  delay(1000);
+  IO_values[id] = ds_sensors.getTempCByIndex(index);
+  delay(100);
+}
+
+void Sensa::readBH1750(byte id){
+  BH1750FVI LightSensor;
+  LightSensor.begin();
+  LightSensor.SetAddress(Device_Address_L);
+  LightSensor.SetMode(Continuous_H_resolution_Mode);
+  IO_values[id] = LightSensor.GetLightIntensity();
+}
+
+void Sensa::readMG811(byte id){
+  float CO2Curve[3]  =  {
+    ZERO_POINT_X,
+    ZERO_POINT_VOLTAGE,
+    (REACTION_VOLTAGE / (2.602 - 4))
+  };
+  int percentage;
+  float volts = 0;
+  int i;
+
+  for (i = 0; i < READ_SAMPLE_TIMES; i++) {
+    volts += analogRead(A5);
+    delay(READ_SAMPLE_INTERVAL);
+  }
+  
+  volts = (volts / READ_SAMPLE_TIMES) * 5 / 1024 ;
+  /*volts = volts / DC_GAIN;
+  if (volts > ZERO_POINT_VOLTAGE || volts < MAX_POINT_VOLTAGE ) {
+    percentage = -1;
+  } else {
+    return pow(10, (volts - CO2Curve[1]) / CO2Curve[2] + CO2Curve[0]);
+    percentage = 0;
+  }
+  IO_values[id] = percentage; */
+  IO_values[id] = volts; 
 }
 
 void Sensa::writeSwitch(byte id, byte value){
@@ -388,6 +480,7 @@ void Sensa::initializeHighPins(){
         if(default_DOs & (1 << i)){
             //Serial.print(F("Turn HIGH ID "));
             //Serial.println(i);
+            pinMode(i, OUTPUT);
             digitalWrite(i, HIGH);
         }
         if(default_DOs <= (1 << i)) break;

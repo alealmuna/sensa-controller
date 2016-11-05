@@ -31,7 +31,9 @@ private:
   void readLDR(byte);
   void readMoisture(byte);
   void readSHT10(byte);
-  void readDS18B20(byte);
+  void readDS18B20(byte, byte);
+  void readBH1750(byte);
+  void readMG811(byte);
   int searchType(byte);
 
   int IO[IO_NUMBER][IO_FIELDS] = {};
